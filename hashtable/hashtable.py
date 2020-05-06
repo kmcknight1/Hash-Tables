@@ -17,9 +17,10 @@ class HashTable:
     Implement this.
     """
 
-    def __init__(self, capacity):
+    def __init__(self, capacity=100):
         self.capacity = capacity
-        self.storage = [None] * self.capacity
+        self.storage = [None] * capacity
+        self.length = 0
 
     def fnv1(self, key):
         """
@@ -27,13 +28,12 @@ class HashTable:
 
         Implement this, and/or DJB2.
         """
-        fnv_prime = 0x100000001b3
-        key_bytes = key.encode()
-        key_hash = 0
-        for byte in key_bytes:
-            key_hash = (key_hash * fnv_prime) % self.capacity
-            key_hash = key_hash ^ ord(byte)
-        return key_hash
+        fnv_prime = 1099511628211
+        hash = 14695981039346656037
+        for i in key:
+            hash = hash * fnv_prime
+            hash = hash ^ ord(i)
+        return hash
 
         
 
@@ -60,6 +60,22 @@ class HashTable:
 
         Implement this.
         """
+        index = self.hash_index(key)
+        if self.storage[index] == None:
+            self.storage[index] = HashTableEntry(key, value)
+        else:
+            node = self.storage[index]
+            while node:
+                if node.key == key:
+                    node.value = value
+                    return
+                prev = node
+                node = node.next
+            prev.next = HashTableEntry(key, value)
+
+        self.length += 1
+
+
 
     def delete(self, key):
         """
@@ -69,6 +85,27 @@ class HashTable:
 
         Implement this.
         """
+        warning = 'Given key does not exist in table.'
+        key_hash = self.hash_index(key)
+        if not self.storage[key_hash]:
+            print(warning)
+            return None
+        node = self.storage[key_hash]
+        if node.key == key:
+            self.storage[key_hash] = node.next
+            return None
+        else:
+            prev = node
+            cur = node.next
+            while cur:
+                if cur.key == key:
+                    prev.next = cur.next
+                    return None
+                cur = cur.next
+        print(warning)
+        return None
+
+
 
     def get(self, key):
         """
@@ -78,6 +115,16 @@ class HashTable:
 
         Implement this.
         """
+        index = self.hash_index(key)
+        if self.storage[index] != None:
+            node = self.storage[index]
+            while node:
+                if node.key == key:
+                    return node.value
+                node = node.next
+            return None
+        else:
+            return None
 
     def resize(self):
         """
